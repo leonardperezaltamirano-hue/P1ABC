@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Evaluación: Aventura del Pingüino Programador - Mr. Leo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 50%, #F0F9FF 100%);
+            min-height: 100vh;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        h1, h2, .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .btn-3d {
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+        }
+        .btn-3d:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2) !important;
+        }
+        .btn-3d:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.4); opacity: 0; }
+            75% { transform: scale(1.08); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .block-pop {
+            animation: popIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px) rotate(-6deg); }
+            40% { transform: translateX(8px) rotate(6deg); }
+            60% { transform: translateX(-6px) rotate(-4deg); }
+            80% { transform: translateX(6px) rotate(4deg); }
+        }
+        .shake-error {
+            animation: shake 0.45s ease-in-out;
+        }
+        @keyframes floatGoal {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .goal-float {
+            animation: floatGoal 1.8s ease-in-out infinite;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+        .confetti-piece {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            top: -20px;
+            z-index: 60;
+            pointer-events: none;
+            border-radius: 3px;
+        }
+        html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col justify-between min-h-[100dvh] w-full">
+
+    <!-- MODAL DE INICIO: NOMBRE DEL ESTUDIANTE Y FECHA AUTOMÁTICA -->
+    <div id="student-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl border-4 border-sky-400 shadow-2xl max-w-md w-full p-5 sm:p-6">
+            <div class="flex items-center justify-center mb-2">
+                <span class="bg-amber-100 text-amber-900 border border-amber-300 text-xs font-extrabold px-3 py-1 rounded-full">
+                    📝 EVALUACIÓN • 45 PTS
+                </span>
+            </div>
+
+            <div class="text-center my-2">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-sky-500 flex items-center justify-center shadow-md border-2 border-sky-600 mb-2">
+                    <svg viewBox="0 0 64 64" class="w-12 h-12">
+                        <ellipse cx="32" cy="34" rx="18" ry="20" fill="#1E293B"/>
+                        <ellipse cx="32" cy="38" rx="12" ry="14" fill="#FFFFFF"/>
+                        <circle cx="26" cy="24" r="3" fill="#FFFFFF"/>
+                        <circle cx="38" cy="24" r="3" fill="#FFFFFF"/>
+                        <circle cx="26.5" cy="24" r="1.5" fill="#0F172A"/>
+                        <circle cx="37.5" cy="24" r="1.5" fill="#0F172A"/>
+                        <polygon points="27,28 37,28 32,35" fill="#F59E0B"/>
+                        <ellipse cx="22" cy="52" rx="6" ry="3.5" fill="#F59E0B"/>
+                        <ellipse cx="42" cy="52" rx="6" ry="3.5" fill="#F59E0B"/>
+                    </svg>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-sky-900 leading-tight">
+                    Evaluación del Pingüino Programador
+                </h2>
+                <p class="text-xs sm:text-sm font-bold text-slate-500 mt-1">
+                    5 niveles × 9 pts cada uno = <strong>45 puntos</strong>
+                </p>
+            </div>
+
+            <form onsubmit="startEvaluation(event)" class="space-y-3 mt-4">
+                <div>
+                    <label for="student-name-input" class="block text-xs sm:text-sm font-extrabold text-sky-900 mb-1">
+                        Nombre y Apellido del Estudiante:
+                    </label>
+                    <input id="student-name-input" type="text" required placeholder="Ej: Mateo Quispe"
+                        class="w-full rounded-2xl border-2 border-sky-300 focus:border-sky-500 focus:outline-none px-4 py-2.5 font-bold text-slate-800 text-base bg-sky-50/50">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label for="student-course-input" class="block text-xs font-extrabold text-sky-900 mb-1">
+                            Curso / Paralelo:
+                        </label>
+                        <input id="student-course-input" type="text" placeholder="Ej: 1° Primaria A"
+                            class="w-full rounded-2xl border-2 border-slate-200 focus:border-sky-500 focus:outline-none px-3 py-2 font-bold text-slate-700 text-sm bg-slate-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-sky-900 mb-1">
+                            Fecha Automática:
+                        </label>
+                        <div id="auto-date-display" class="w-full rounded-2xl border-2 border-emerald-200 bg-emerald-50 px-3 py-2 font-extrabold text-emerald-800 text-sm text-center">
+                            --/--/----
+                        </div>
+                    </div>
+                </div>
+
+                <div id="student-error-msg" class="hidden text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-2 text-center"></div>
+
+                <button type="submit"
+                    class="btn-3d w-full bg-emerald-500 hover:bg-emerald-400 text-white border-2 border-emerald-600 shadow-[0_4px_0_#059669] rounded-2xl py-3 font-display font-bold text-lg flex items-center justify-center gap-2 mt-2">
+                    <span>🚀 Comenzar Evaluación</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ENCABEZADO COMPACTO DE EVALUACIÓN -->
+    <header class="w-full max-w-5xl mx-auto px-2 sm:px-4 pt-1.5 sm:pt-3 pb-1">
+        <div class="bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-md border-2 sm:border-4 border-sky-200 px-2.5 py-1.5 sm:p-3 md:px-6 flex items-center justify-between gap-2">
+            <!-- Título + Datos del Estudiante -->
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-600 flex items-center justify-center shadow-sm border-2 border-indigo-700 shrink-0 text-white font-display font-bold text-sm sm:text-xl">
+                    📝
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-[12px] sm:text-lg md:text-xl font-bold text-sky-900 leading-tight truncate">
+                        Evaluación Pingüino Programador • Mr. Leo
+                    </h1>
+                    <div class="flex items-center gap-2 text-[10px] sm:text-xs font-extrabold text-slate-600 truncate">
+                        <span id="header-student-name" class="text-indigo-700 truncate">👤 Estudiante</span>
+                        <span>•</span>
+                        <span id="header-date" class="text-slate-500 shrink-0">📅 --/--/----</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Puntaje Acumulado + Sonido -->
+            <div class="flex items-center gap-1.5 shrink-0">
+                <div class="bg-emerald-100 border-2 border-emerald-400 text-emerald-900 rounded-xl px-2 py-1 sm:px-3 sm:py-1.5 font-display font-bold text-xs sm:text-base flex items-center gap-1 shadow-sm">
+                    <span>🏆</span>
+                    <span id="total-score-badge">0 / 45 pts</span>
+                </div>
+                <button id="btn-sound" onclick="toggleSound()" title="Activar o silenciar sonidos"
+                    class="btn-3d bg-amber-100 hover:bg-amber-200 text-amber-800 border-2 border-amber-300 shadow-[0_2px_0_#FCD34D] rounded-xl px-2 py-1 sm:px-2.5 sm:py-1.5 font-bold text-xs sm:text-sm">
+                    <span id="sound-icon" class="text-sm sm:text-base leading-none">🔊</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- BARRA DE 5 NIVELES DE EVALUACIÓN (9 PTS CADA UNO) -->
+        <div class="mt-1.5 sm:mt-2.5 bg-white/90 rounded-xl sm:rounded-2xl px-2 py-1.5 sm:p-2 border-2 border-sky-200 shadow-sm flex items-center justify-between gap-1.5">
+            <div id="level-selector" class="grid grid-cols-5 gap-1.5 sm:gap-2 w-full">
+                <!-- Botones de los 5 niveles generados por JS -->
+            </div>
+            <button onclick="openFinishModal()"
+                class="btn-3d bg-indigo-600 hover:bg-indigo-500 text-white border-2 border-indigo-700 shadow-[0_2px_0_#312E81] rounded-xl px-2.5 py-1 sm:px-4 sm:py-2 font-display font-bold text-[11px] sm:text-sm shrink-0">
+                📤 Finalizar
+            </button>
+        </div>
+    </header>
+
+    <!-- ÁREA PRINCIPAL DEL JUEGO -->
+    <main class="w-full max-w-5xl mx-auto px-2 sm:px-4 py-1 sm:py-2 flex-grow flex flex-col justify-between gap-1.5 sm:gap-3">
+        
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5 sm:gap-4 items-center">
+            
+            <!-- COLUMNA IZQUIERDA (7 cols): LABERINTO -->
+            <div class="md:col-span-7 flex flex-col items-center">
+                <div class="w-full bg-white rounded-2xl sm:rounded-3xl shadow-lg border-2 sm:border-4 border-slate-200 p-2 sm:p-5 flex flex-col items-center relative">
+                    
+                    <!-- Encabezado del Nivel -->
+                    <div class="w-full flex items-center justify-between gap-2 mb-1 sm:mb-2 px-0.5">
+                        <span id="level-badge" class="bg-indigo-600 text-white font-display font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-base shadow-sm">
+                            Nivel 1 de 5 (Vale 9 pts)
+                        </span>
+                        <span id="level-hint-badge" class="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-sm">
+                            Ideal: 5 bloques
+                        </span>
+                    </div>
+
+                    <!-- Banner de Retroalimentación -->
+                    <div id="feedback-banner" class="w-full min-h-[30px] sm:min-h-[44px] mb-1 sm:mb-2 rounded-xl sm:rounded-2xl px-2 py-1 sm:px-3 sm:py-2 text-center font-bold text-[11px] sm:text-base leading-tight flex items-center justify-center transition-all duration-200 bg-sky-50 text-sky-800 border border-sky-200 sm:border-2">
+                        ¡Lleva al pingüino hasta el pececito para ganar 9 puntos!
+                    </div>
+
+                    <!-- CONTENEDOR DEL LABERINTO -->
+                    <div id="maze-wrapper" class="relative w-[min(64vw,225px)] sm:w-full sm:max-w-[370px] md:max-w-[400px] aspect-square bg-white rounded-xl sm:rounded-2xl p-1 sm:p-2 flex items-center justify-center">
+                        <svg id="maze-svg" viewBox="0 0 400 400" class="w-full h-full overflow-visible">
+                            <g id="grid-layer"></g>
+                            <g id="goal-layer"></g>
+                            <g id="walls-layer"></g>
+                        </svg>
+
+                        <!-- Personaje Pingüino -->
+                        <div id="penguin-actor" class="absolute transition-all duration-300 ease-in-out pointer-events-none flex items-center justify-center z-20"
+                             style="width: 20%; height: 20%; left: 0%; top: 0%;">
+                            <div id="penguin-sprite" class="w-full h-full transition-transform duration-300 ease-out flex items-center justify-center relative">
+                                <svg viewBox="0 0 100 100" class="w-[92%] h-[92%] drop-shadow-md">
+                                    <polygon points="50,1 42,12 58,12" fill="#EF4444" stroke="#FFFFFF" stroke-width="1.5"/>
+                                    <path d="M 28 28 Q 22 16 33 18 Q 38 19 39 28 Z" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+                                    <path d="M 72 28 Q 78 16 67 18 Q 62 19 61 28 Z" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+                                    <ellipse cx="14" cy="56" rx="12" ry="6" transform="rotate(-15 14 56)" fill="#1E293B"/>
+                                    <ellipse cx="86" cy="56" rx="12" ry="6" transform="rotate(15 86 56)" fill="#1E293B"/>
+                                    <ellipse cx="50" cy="58" rx="34" ry="28" fill="#1E293B"/>
+                                    <path d="M 26 46 C 26 26, 74 26, 74 46 C 74 56, 26 56, 26 46 Z" fill="#FFFFFF"/>
+                                    <ellipse cx="41" cy="44" rx="5.5" ry="7" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5"/>
+                                    <ellipse cx="59" cy="44" rx="5.5" ry="7" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5"/>
+                                    <circle cx="42" cy="42" r="3" fill="#0F172A"/>
+                                    <circle cx="58" cy="42" r="3" fill="#0F172A"/>
+                                    <circle cx="43" cy="40.5" r="1.1" fill="#FFFFFF"/>
+                                    <circle cx="59" cy="40.5" r="1.1" fill="#FFFFFF"/>
+                                    <path d="M 41 32 Q 50 14 59 32 Q 50 37 41 32 Z" fill="#FBBF24" stroke="#D97706" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA (5 cols): CONTROL DIRECCIONAL Y EJECUCIÓN -->
+            <div class="md:col-span-5 flex flex-col gap-1.5 sm:gap-3">
+                <div class="bg-white rounded-2xl sm:rounded-3xl shadow-lg border-2 sm:border-4 border-sky-200 p-2 sm:p-4 flex flex-col items-center">
+                    <h2 class="hidden sm:flex text-base sm:text-lg font-bold text-sky-900 mb-1 items-center gap-2">
+                        <span>🎮</span> Comandos del Pingüino
+                    </h2>
+                    <p class="hidden sm:block text-xs text-slate-500 font-bold mb-3 text-center">
+                        ⬆️⬇️ Avanzan o retroceden • ⬅️➡️ Giran sobre su lugar
+                    </p>
+
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2.5 w-full max-w-[235px] sm:max-w-[290px]">
+                        <div></div>
+                        <button id="btn-dir-UP" onclick="addCommand('FORWARD')"
+                            class="btn-3d bg-sky-500 hover:bg-sky-400 text-white border-2 border-sky-600 shadow-[0_3px_0_#0284C7] sm:shadow-[0_5px_0_#0284C7] rounded-xl sm:rounded-2xl py-1.5 sm:py-3 px-1.5 flex flex-col items-center justify-center touch-manipulation">
+                            <span class="text-lg sm:text-3xl leading-none">⬆️</span>
+                            <span class="text-[10px] sm:text-xs font-extrabold mt-0.5 sm:mt-1">Adelante</span>
+                        </button>
+                        <div></div>
+
+                        <button id="btn-dir-LEFT" onclick="addCommand('TURN_LEFT')"
+                            class="btn-3d bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-600 shadow-[0_3px_0_#4338CA] sm:shadow-[0_5px_0_#4338CA] rounded-xl sm:rounded-2xl py-1.5 sm:py-3 px-1 flex flex-col items-center justify-center touch-manipulation">
+                            <span class="text-lg sm:text-3xl leading-none">⬅️</span>
+                            <span class="text-[9px] sm:text-[11px] font-extrabold mt-0.5 sm:mt-1 leading-tight">Girar Izq.</span>
+                        </button>
+
+                        <button id="btn-dir-DOWN" onclick="addCommand('BACKWARD')"
+                            class="btn-3d bg-amber-500 hover:bg-amber-400 text-white border-2 border-amber-600 shadow-[0_3px_0_#D97706] sm:shadow-[0_5px_0_#D97706] rounded-xl sm:rounded-2xl py-1.5 sm:py-3 px-1.5 flex flex-col items-center justify-center touch-manipulation">
+                            <span class="text-lg sm:text-3xl leading-none">⬇️</span>
+                            <span class="text-[10px] sm:text-xs font-extrabold mt-0.5 sm:mt-1">Atrás</span>
+                        </button>
+
+                        <button id="btn-dir-RIGHT" onclick="addCommand('TURN_RIGHT')"
+                            class="btn-3d bg-teal-500 hover:bg-teal-400 text-white border-2 border-teal-600 shadow-[0_3px_0_#0F766E] sm:shadow-[0_5px_0_#0F766E] rounded-xl sm:rounded-2xl py-1.5 sm:py-3 px-1 flex flex-col items-center justify-center touch-manipulation">
+                            <span class="text-lg sm:text-3xl leading-none">➡️</span>
+                            <span class="text-[9px] sm:text-[11px] font-extrabold mt-0.5 sm:mt-1 leading-tight">Girar Der.</span>
+                        </button>
+                    </div>
+
+                    <div class="w-full grid grid-cols-12 sm:flex sm:flex-col gap-1.5 sm:gap-2.5 mt-2 sm:mt-4">
+                        <button id="btn-run" onclick="runSequence()"
+                            class="col-span-6 btn-3d w-full bg-emerald-500 hover:bg-emerald-400 text-white border-2 border-emerald-600 shadow-[0_3px_0_#059669] sm:shadow-[0_5px_0_#059669] rounded-xl sm:rounded-2xl py-2 sm:py-3.5 px-2 sm:px-4 font-display font-bold text-sm sm:text-xl flex items-center justify-center gap-1.5 tracking-wide touch-manipulation">
+                            <span>▶️</span> Ejecutar
+                        </button>
+
+                        <div class="col-span-6 grid grid-cols-2 gap-1.5 sm:gap-2.5">
+                            <button id="btn-undo" onclick="removeLastCommand()"
+                                class="btn-3d bg-orange-100 hover:bg-orange-200 text-orange-800 border-2 border-orange-300 shadow-[0_3px_0_#FDBA74] rounded-xl sm:rounded-2xl py-2 sm:py-2.5 px-1.5 sm:px-3 font-bold text-[11px] sm:text-sm flex items-center justify-center gap-1 touch-manipulation">
+                                <span>⌫</span> <span>Borrar</span>
+                            </button>
+                            <button id="btn-clear" onclick="clearCommands()"
+                                class="btn-3d bg-rose-100 hover:bg-rose-200 text-rose-800 border-2 border-rose-300 shadow-[0_3px_0_#FDA4AF] rounded-xl sm:rounded-2xl py-2 sm:py-2.5 px-1.5 sm:px-3 font-bold text-[11px] sm:text-sm flex items-center justify-center gap-1 touch-manipulation">
+                                <span>🔄</span> <span>Reiniciar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN INFERIOR: CADENA DE CÓDIGO -->
+        <section class="w-full bg-white rounded-2xl sm:rounded-3xl shadow-lg border-2 sm:border-4 border-slate-200 p-2 sm:p-4 mb-1">
+            <div class="flex items-center justify-between gap-2 mb-1 sm:mb-2 px-0.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-base sm:text-xl">🧩</span>
+                    <h2 class="text-xs sm:text-lg font-bold text-slate-800">Tu Cadena de Código:</h2>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] sm:text-sm font-bold">
+                    <span id="step-counter" class="bg-sky-100 text-sky-800 px-2 sm:px-3 py-0.5 rounded-full border border-sky-300">
+                        0 / 15 bloques
+                    </span>
+                </div>
+            </div>
+
+            <div id="code-slots-container" class="flex flex-wrap items-center justify-center sm:justify-start gap-1 sm:gap-2.5 min-h-[48px] sm:min-h-[76px] p-1.5 sm:p-2 bg-slate-50 rounded-xl sm:rounded-2xl border-2 border-dashed border-slate-300">
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE NIVEL SUPERADO (+9 PTS) -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-900/65 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl border-4 border-amber-300 shadow-2xl max-w-md w-full p-5 sm:p-6 text-center">
+            <div class="text-4xl sm:text-6xl mb-2">👨‍🏫🏆🐧</div>
+            <h2 class="text-xl sm:text-2xl font-bold text-sky-900 mb-1">
+                ¡Mr. Leo te felicita por tu logro!
+            </h2>
+            <p id="victory-subtitle" class="text-emerald-700 font-extrabold text-base sm:text-lg mb-3">
+                +9 Puntos ganados en este nivel
+            </p>
+            
+            <div class="bg-emerald-50 rounded-2xl p-3 border-2 border-emerald-200 mb-4">
+                <p class="text-xs font-extrabold uppercase text-emerald-800">Puntaje Total Acumulado</p>
+                <p id="victory-total-score" class="text-2xl sm:text-3xl font-display font-bold text-emerald-700 mt-0.5">
+                    9 / 45 pts
+                </p>
+                <p id="auto-save-indicator" class="text-[11px] font-bold text-emerald-700 mt-1">
+                    ☁️ Guardando puntaje en la hoja de Mr. Leo...
+                </p>
+            </div>
+
+            <button id="btn-next-level" onclick="nextLevel()"
+                class="btn-3d w-full bg-emerald-500 hover:bg-emerald-400 text-white border-2 border-emerald-600 shadow-[0_4px_0_#059669] rounded-2xl px-6 py-3 font-display font-bold text-base sm:text-lg flex items-center justify-center gap-2">
+                <span>Vamos al siguiente Nivel</span> <span>➡️</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL FINAL DE EVALUACIÓN Y ENVÍO A GOOGLE SHEETS -->
+    <div id="finish-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl border-4 border-emerald-400 shadow-2xl max-w-md w-full p-5 sm:p-6 text-center">
+            <div class="text-4xl sm:text-5xl mb-1">🎓📊🐧</div>
+            <h2 class="text-xl sm:text-2xl font-bold text-sky-900">
+                Boleta de Evaluación
+            </h2>
+            <p id="summary-student-info" class="text-xs sm:text-sm font-bold text-slate-600 mt-1">
+                Estudiante • Fecha
+            </p>
+
+            <!-- Desglose de los 5 niveles -->
+            <div id="levels-breakdown" class="my-3 space-y-1.5 text-left bg-slate-50 p-3 rounded-2xl border-2 border-slate-200 text-xs sm:text-sm">
+            </div>
+
+            <div class="bg-emerald-100 border-2 border-emerald-400 rounded-2xl p-3 mb-4">
+                <span class="text-xs font-extrabold uppercase text-emerald-900 block">Nota Final Obtenida</span>
+                <span id="final-grade-display" class="text-3xl font-display font-bold text-emerald-800">
+                    0 / 45 pts
+                </span>
+            </div>
+
+            <div id="sheets-send-status" class="hidden mb-3 text-xs font-bold rounded-xl p-2.5 border"></div>
+
+            <div class="flex flex-col gap-2">
+                <button id="btn-send-sheets" onclick="submitEvaluationToGoogleSheets()"
+                    class="btn-3d w-full bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-700 shadow-[0_4px_0_#065F46] rounded-2xl py-3 font-display font-bold text-base sm:text-lg flex items-center justify-center gap-2">
+                    <span>📤 Enviar Nota a Google Sheets</span>
+                </button>
+                <button onclick="closeFinishModal()"
+                    class="btn-3d w-full bg-slate-100 hover:bg-slate-200 text-slate-700 border-2 border-slate-300 rounded-2xl py-2 font-bold text-xs sm:text-sm">
+                    Seguir revisando niveles
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * SINTETIZADOR DE SONIDOS (WEB AUDIO API)
+         */
+        class SoundFX {
+            constructor() {
+                this.enabled = true;
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            }
+            playTone(freq, duration = 0.12, type = 'sine', delay = 0, vol = 0.15) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime + delay;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + duration);
+            }
+            click(cmd) {
+                const map = { FORWARD: 523.25, TURN_RIGHT: 587.33, BACKWARD: 440.00, TURN_LEFT: 493.88 };
+                this.playTone(map[cmd] || 500, 0.1, 'triangle', 0, 0.14);
+            }
+            delete() {
+                this.playTone(330, 0.09, 'sine', 0, 0.12);
+                this.playTone(260, 0.11, 'sine', 0.06, 0.12);
+            }
+            step() { this.playTone(392, 0.08, 'sine', 0, 0.12); }
+            turn() { this.playTone(493.88, 0.09, 'triangle', 0, 0.12); }
+            bump() {
+                this.playTone(150, 0.25, 'sawtooth', 0, 0.18);
+                this.playTone(110, 0.3, 'sawtooth', 0.1, 0.18);
+            }
+            victory() {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((n, i) => this.playTone(n, 0.22, 'triangle', i * 0.11, 0.18));
+            }
+        }
+        const SFX = new SoundFX();
+
+        /**
+         * 5 NIVELES DE EVALUACIÓN PROGRESIVOS
+         * Cada nivel vale 9 puntos: 5 niveles × 9 pts = 45 puntos totales.
+         */
+        const POINTS_PER_LEVEL = 9;
+        const EVAL_LEVELS = [
+            {
+                id: 1,
+                name: "Nivel 1: Primer Giro",
+                points: 9,
+                size: 3,
+                start: { r: 2, c: 0, dir: 'UP' },
+                exit: { r: 0, c: 2, side: 'TOP' },
+                optimalSteps: 5,
+                maxSlots: 8,
+                hWalls: [[1,0], [1,1]],
+                vWalls: []
+            },
+            {
+                id: 2,
+                name: "Nivel 2: Rodeo en Hielo",
+                points: 9,
+                size: 3,
+                start: { r: 2, c: 1, dir: 'UP' },
+                exit: { r: 0, c: 1, side: 'TOP' },
+                optimalSteps: 8,
+                maxSlots: 11,
+                hWalls: [[1,1]],
+                vWalls: [[0,1], [1,1]]
+            },
+            {
+                id: 3,
+                name: "Nivel 3: Puente Nevado",
+                points: 9,
+                size: 4,
+                start: { r: 3, c: 3, dir: 'UP' },
+                exit: { r: 0, c: 0, side: 'TOP' },
+                optimalSteps: 9,
+                maxSlots: 12,
+                hWalls: [[2,2], [2,3], [0,1], [0,2]],
+                vWalls: [[1,0], [2,0]]
+            },
+            {
+                id: 4,
+                name: "Nivel 4: Laberinto Clásico",
+                points: 9,
+                size: 4,
+                start: { r: 3, c: 2, dir: 'UP' },
+                exit: { r: 0, c: 1, side: 'TOP' },
+                optimalSteps: 13,
+                maxSlots: 16,
+                hWalls: [[2,0], [2,2], [1,1]],
+                vWalls: [[1,1], [2,0], [1,2], [2,2]]
+            },
+            {
+                id: 5,
+                name: "Nivel 5: Gran Expedición",
+                points: 9,
+                size: 5,
+                start: { r: 4, c: 0, dir: 'UP' },
+                exit: { r: 0, c: 4, side: 'TOP' },
+                optimalSteps: 15,
+                maxSlots: 19,
+                hWalls: [[3,0], [3,1], [3,2], [1,2], [1,3], [1,4]],
+                vWalls: [[2,1], [2,2], [0,1]]
+            }
+        ];
+
+        const CMD_META = {
+            FORWARD:    { arrow: '⬆️', label: 'Adelante',  bg: 'bg-sky-500',    border: 'border-sky-700',    shadow: 'shadow-[0_4px_0_#0369A1]' },
+            BACKWARD:   { arrow: '⬇️', label: 'Atrás',     bg: 'bg-amber-500',  border: 'border-amber-700',  shadow: 'shadow-[0_4px_0_#B45309]' },
+            TURN_LEFT:  { arrow: '⬅️', label: 'Izquierda', bg: 'bg-indigo-500', border: 'border-indigo-700', shadow: 'shadow-[0_4px_0_#3730A3]' },
+            TURN_RIGHT: { arrow: '➡️', label: 'Derecha',   bg: 'bg-teal-500',   border: 'border-teal-700',   shadow: 'shadow-[0_4px_0_#115E59]' }
+        };
+
+        const DIR_VECTORS = {
+            UP:    { dr: -1, dc: 0, deg: 0 },
+            RIGHT: { dr: 0,  dc: 1, deg: 90 },
+            DOWN:  { dr: 1,  dc: 0, deg: 180 },
+            LEFT:  { dr: 0,  dc: -1, deg: -90 }
+        };
+        const COMPASS_ORDER = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
+
+        // Estado de la evaluación y del estudiante
+        let studentData = {
+            name: '',
+            course: '',
+            dateStr: '',
+            timeStr: ''
+        };
+        let levelScores = [0, 0, 0, 0, 0]; // 9 pts por nivel resuelto, total 45 pts
+        let currentLevelIdx = 0;
+        let commandQueue = [];
+        let isRunning = false;
+        let penguinPos = { r: 0, c: 0, dir: 'UP' };
+        let visualRotation = 0;
+        let lastSentSignature = '';
+
+        // URL fija del Web App de Google Apps Script de Mr. Leo
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6MNF7oqxgRY9m5A05_CLwp-t5kjISjiPLk8Kf1iS4slsxKXXgfOCnG32pIw3Q1wSY/exec";
+
+        window.onload = function () {
+            initAutoDate();
+            renderLevelSelector();
+            loadLevel(0);
+            setupKeyboardListeners();
+        };
+
+        /**
+         * Obtiene y formatea la fecha y hora automática del dispositivo
+         */
+        function initAutoDate() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+
+            studentData.dateStr = `${day}/${month}/${year}`;
+            studentData.timeStr = `${hours}:${mins}`;
+
+            document.getElementById('auto-date-display').textContent = studentData.dateStr;
+            document.getElementById('header-date').textContent = `📅 ${studentData.dateStr}`;
+        }
+
+        /**
+         * Registra al estudiante e inicia la evaluación de 5 niveles
+         */
+        function startEvaluation(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('student-name-input').value.trim();
+            const courseInput = document.getElementById('student-course-input').value.trim() || '1° Primaria';
+            const errEl = document.getElementById('student-error-msg');
+
+            if (nameInput.length < 3) {
+                errEl.textContent = 'Por favor escribe tu nombre y apellido completo.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            errEl.classList.add('hidden');
+            initAutoDate();
+            studentData.name = nameInput;
+            studentData.course = courseInput;
+
+            document.getElementById('header-student-name').textContent = `👤 ${studentData.name}`;
+            document.getElementById('student-modal').classList.add('hidden');
+            SFX.click('FORWARD');
+        }
+
+        function getTotalScore() {
+            return levelScores.reduce((acc, s) => acc + s, 0);
+        }
+
+        function updateScoreDisplay() {
+            const total = getTotalScore();
+            document.getElementById('total-score-badge').textContent = `${total} / 45 pts`;
+        }
+
+        /**
+         * Renderiza los 5 botones de niveles con su estado y puntaje (0 o 9 pts)
+         */
+        function renderLevelSelector() {
+            const container = document.getElementById('level-selector');
+            container.innerHTML = '';
+
+            EVAL_LEVELS.forEach((lvl, idx) => {
+                const isCurrent = idx === currentLevelIdx;
+                const score = levelScores[idx];
+                const isSolved = score === POINTS_PER_LEVEL;
+
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    if (!isRunning) loadLevel(idx);
+                };
+
+                let classes = 'btn-3d py-1 sm:py-1.5 px-1 rounded-xl font-display font-bold text-[10px] sm:text-xs flex flex-col items-center justify-center border-2 leading-tight ';
+                if (isCurrent) {
+                    classes += 'bg-indigo-600 text-white border-indigo-800 shadow-[0_2px_0_#1E1B4B]';
+                } else if (isSolved) {
+                    classes += 'bg-emerald-100 text-emerald-900 border-emerald-400 shadow-[0_2px_0_#34D399]';
+                } else {
+                    classes += 'bg-slate-100 hover:bg-sky-100 text-slate-700 border-slate-300 shadow-[0_2px_0_#CBD5E1]';
+                }
+
+                btn.className = classes;
+                btn.innerHTML = `
+                    <span>N${lvl.id} ${isSolved ? '✅' : ''}</span>
+                    <span class="text-[9px] sm:text-[10px] opacity-90">${score}/${lvl.points}p</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function loadLevel(idx) {
+            currentLevelIdx = idx;
+            const level = EVAL_LEVELS[currentLevelIdx];
+            commandQueue = [];
+            isRunning = false;
+
+            const alreadySolved = levelScores[idx] === POINTS_PER_LEVEL;
+            document.getElementById('level-badge').textContent = `Nivel ${level.id} de 5 (${alreadySolved ? '9/9 pts ✓' : 'Vale 9 pts'})`;
+            document.getElementById('level-hint-badge').textContent = `Ideal: ${level.optimalSteps} bloques`;
+            setFeedback(
+                alreadySolved
+                    ? '✅ Ya ganaste los 9 puntos de este nivel. Puedes avanzar al siguiente.'
+                    : '¡Programa el camino hasta el pececito para ganar 9 puntos!',
+                alreadySolved ? 'success' : 'info'
+            );
+
+            renderLevelSelector();
+            drawMaze(level);
+            resetPenguinToStart(level);
+            renderCodeSlots();
+            setControlsDisabled(false);
+        }
+
+        function drawMaze(level) {
+            const N = level.size;
+            const pad = 24;
+            const boardSize = 400 - pad * 2;
+            const cell = boardSize / N;
+            const wallColor = '#525252';
+            const wallThickness = N <= 4 ? 12 : 10;
+
+            const gridLayer = document.getElementById('grid-layer');
+            const goalLayer = document.getElementById('goal-layer');
+            const wallsLayer = document.getElementById('walls-layer');
+
+            gridLayer.innerHTML = '';
+            goalLayer.innerHTML = '';
+            wallsLayer.innerHTML = '';
+
+            for (let r = 0; r < N; r++) {
+                for (let c = 0; c < N; c++) {
+                    const isGoalCell = (r === level.exit.r && c === level.exit.c);
+                    const rect = createSvgEl('rect', {
+                        x: pad + c * cell + 3,
+                        y: pad + r * cell + 3,
+                        width: cell - 6,
+                        height: cell - 6,
+                        rx: 10,
+                        fill: isGoalCell ? '#D1FAE5' : '#F8FAFC',
+                        stroke: isGoalCell ? '#10B981' : '#E2E8F0',
+                        'stroke-width': isGoalCell ? 3 : 2,
+                        'stroke-dasharray': isGoalCell ? 'none' : '4 4'
+                    });
+                    gridLayer.appendChild(rect);
+                }
+            }
+
+            const gx = pad + level.exit.c * cell + cell / 2;
+            const gy = pad + level.exit.r * cell + cell / 2;
+            const s = (cell * 0.62) / 64;
+            const goalGroup = createSvgEl('g', { transform: `translate(${gx}, ${gy})` });
+            goalGroup.innerHTML = `
+                <g class="goal-float">
+                    <g transform="scale(${s}) translate(-32, -32)">
+                        <polygon points="48,32 62,18 59,32 62,46" fill="#0284C7" stroke="#0369A1" stroke-width="2.5" stroke-linejoin="round"/>
+                        <path d="M 24 19 Q 32 8 40 19 Z" fill="#38BDF8" stroke="#0369A1" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M 26 45 Q 32 54 38 45 Z" fill="#38BDF8" stroke="#0369A1" stroke-width="2" stroke-linejoin="round"/>
+                        <ellipse cx="28" cy="32" rx="22" ry="14" fill="#38BDF8" stroke="#0369A1" stroke-width="2.5"/>
+                        <path d="M 26 20 Q 29 32 26 44" fill="none" stroke="#E0F2FE" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M 34 21 Q 37 32 34 43" fill="none" stroke="#E0F2FE" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="15" cy="29" r="3.5" fill="#FFFFFF"/>
+                        <circle cx="14.2" cy="29" r="1.8" fill="#0F172A"/>
+                        <path d="M 8 34 Q 12 37 15 34" fill="none" stroke="#0369A1" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+                </g>
+            `;
+            goalLayer.appendChild(goalGroup);
+
+            const addWall = (x1, y1, x2, y2) => {
+                wallsLayer.appendChild(createSvgEl('line', {
+                    x1, y1, x2, y2,
+                    stroke: wallColor,
+                    'stroke-width': wallThickness,
+                    'stroke-linecap': 'square'
+                }));
+            };
+
+            for (let c = 0; c < N; c++) {
+                if (!(level.exit.side === 'TOP' && level.exit.r === 0 && level.exit.c === c)) {
+                    addWall(pad + c * cell, pad, pad + (c + 1) * cell, pad);
+                }
+            }
+            for (let c = 0; c < N; c++) {
+                const isStartBottom = (level.start.r === N - 1 && level.start.c === c);
+                const isExitBottom = (level.exit.side === 'BOTTOM' && level.exit.r === N - 1 && level.exit.c === c);
+                if (!isStartBottom && !isExitBottom) {
+                    addWall(pad + c * cell, pad + N * cell, pad + (c + 1) * cell, pad + N * cell);
+                }
+            }
+            for (let r = 0; r < N; r++) {
+                if (!(level.exit.side === 'LEFT' && level.exit.c === 0 && level.exit.r === r)) {
+                    addWall(pad, pad + r * cell, pad, pad + (r + 1) * cell);
+                }
+            }
+            for (let r = 0; r < N; r++) {
+                if (!(level.exit.side === 'RIGHT' && level.exit.c === N - 1 && level.exit.r === r)) {
+                    addWall(pad + N * cell, pad + r * cell, pad + N * cell, pad + (r + 1) * cell);
+                }
+            }
+
+            level.hWalls.forEach(([r, c]) => {
+                const y = pad + (r + 1) * cell;
+                addWall(pad + c * cell, y, pad + (c + 1) * cell, y);
+            });
+            level.vWalls.forEach(([r, c]) => {
+                const x = pad + (c + 1) * cell;
+                addWall(x, pad + r * cell, x, pad + (r + 1) * cell);
+            });
+        }
+
+        function createSvgEl(tag, attrs) {
+            const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+            for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+            return el;
+        }
+
+        function resetPenguinToStart(level) {
+            penguinPos = { r: level.start.r, c: level.start.c, dir: level.start.dir || 'UP' };
+            visualRotation = DIR_VECTORS[penguinPos.dir].deg;
+            updatePenguinVisual(false);
+        }
+
+        function updatePenguinVisual(animate = true) {
+            const N = EVAL_LEVELS[currentLevelIdx].size;
+            const padPct = (24 / 400) * 100;
+            const boardPct = 100 - padPct * 2;
+            const cellPct = boardPct / N;
+
+            const actor = document.getElementById('penguin-actor');
+            const sprite = document.getElementById('penguin-sprite');
+
+            actor.style.transition = animate ? 'all 0.32s cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
+            actor.style.width = `${cellPct}%`;
+            actor.style.height = `${cellPct}%`;
+            actor.style.left = `${padPct + penguinPos.c * cellPct}%`;
+            actor.style.top = `${padPct + penguinPos.r * cellPct}%`;
+            sprite.style.transform = `rotate(${visualRotation}deg)`;
+        }
+
+        function addCommand(cmd) {
+            if (isRunning) return;
+            const level = EVAL_LEVELS[currentLevelIdx];
+            if (commandQueue.length >= level.maxSlots) {
+                SFX.bump();
+                setFeedback(`¡Límite alcanzado! Máximo ${level.maxSlots} bloques en este nivel.`, 'warning');
+                return;
+            }
+            commandQueue.push(cmd);
+            SFX.click(cmd);
+            renderCodeSlots(-1, commandQueue.length - 1);
+        }
+
+        function removeLastCommand() {
+            if (isRunning || commandQueue.length === 0) return;
+            commandQueue.pop();
+            SFX.delete();
+            renderCodeSlots();
+        }
+
+        function removeCommandAt(index) {
+            if (isRunning) return;
+            commandQueue.splice(index, 1);
+            SFX.delete();
+            renderCodeSlots();
+        }
+
+        function clearCommands() {
+            if (isRunning) return;
+            commandQueue = [];
+            SFX.delete();
+            resetPenguinToStart(EVAL_LEVELS[currentLevelIdx]);
+            renderCodeSlots();
+            setFeedback('Tablero reiniciado. ¡Vuelve a intentarlo!', 'info');
+        }
+
+        function renderCodeSlots(activeIdx = -1, newlyAddedIdx = -1) {
+            const level = EVAL_LEVELS[currentLevelIdx];
+            const container = document.getElementById('code-slots-container');
+            const counter = document.getElementById('step-counter');
+
+            const totalSlots = Math.max(level.optimalSteps, commandQueue.length);
+            counter.textContent = `${commandQueue.length} / ${level.maxSlots} bloques`;
+            container.innerHTML = '';
+
+            for (let i = 0; i < totalSlots; i++) {
+                const cmd = commandQueue[i];
+                const slot = document.createElement('button');
+                slot.type = 'button';
+
+                if (cmd) {
+                    const meta = CMD_META[cmd];
+                    const isActive = i === activeIdx;
+                    const isNew = i === newlyAddedIdx;
+
+                    slot.onclick = () => removeCommandAt(i);
+                    slot.className = `relative w-10 h-11 sm:w-14 sm:h-16 rounded-xl sm:rounded-2xl border-2 ${meta.border} ${meta.bg} ${meta.shadow} text-white flex flex-col items-center justify-center transition-all ${isNew ? 'block-pop' : ''} ${isActive ? 'ring-4 ring-yellow-300 scale-110 z-10' : 'hover:brightness-105'}`;
+                    slot.innerHTML = `
+                        <span class="absolute top-0.5 left-1 text-[8px] sm:text-[10px] font-extrabold opacity-80">${i + 1}</span>
+                        <span class="text-base sm:text-2xl leading-none mt-1">${meta.arrow}</span>
+                        <span class="hidden sm:block text-[9px] font-extrabold tracking-tight mt-0.5">${meta.label}</span>
+                    `;
+                } else {
+                    slot.disabled = true;
+                    slot.className = 'w-10 h-11 sm:w-14 sm:h-16 rounded-xl sm:rounded-2xl border-2 border-slate-400 bg-white flex flex-col items-center justify-center text-slate-300 font-bold text-[10px] sm:text-xs shadow-inner';
+                    slot.innerHTML = `<span>${i + 1}</span>`;
+                }
+                container.appendChild(slot);
+            }
+        }
+
+        function getTurnedDirection(currentDir, turnCmd) {
+            const idx = COMPASS_ORDER.indexOf(currentDir);
+            return turnCmd === 'TURN_RIGHT'
+                ? COMPASS_ORDER[(idx + 1) % 4]
+                : COMPASS_ORDER[(idx + 3) % 4];
+        }
+
+        function getMoveCardinal(facingDir, moveCmd) {
+            if (moveCmd === 'FORWARD') return facingDir;
+            const idx = COMPASS_ORDER.indexOf(facingDir);
+            return COMPASS_ORDER[(idx + 2) % 4];
+        }
+
+        function canMove(level, r, c, cardinalDir) {
+            const N = level.size;
+            const { dr, dc } = DIR_VECTORS[cardinalDir];
+            const nr = r + dr;
+            const nc = c + dc;
+            if (nr < 0 || nr >= N || nc < 0 || nc >= N) return false;
+            if (cardinalDir === 'UP') return !level.hWalls.some(([wr, wc]) => wr === nr && wc === c);
+            if (cardinalDir === 'DOWN') return !level.hWalls.some(([wr, wc]) => wr === r && wc === c);
+            if (cardinalDir === 'LEFT') return !level.vWalls.some(([wr, wc]) => wr === r && wc === nc);
+            if (cardinalDir === 'RIGHT') return !level.vWalls.some(([wr, wc]) => wr === r && wc === c);
+            return false;
+        }
+
+        async function runSequence() {
+            if (isRunning) return;
+            if (commandQueue.length === 0) {
+                SFX.bump();
+                setFeedback('¡Agrega bloques direccionales antes de ejecutar!', 'warning');
+                return;
+            }
+
+            isRunning = true;
+            setControlsDisabled(true);
+            const level = EVAL_LEVELS[currentLevelIdx];
+
+            resetPenguinToStart(level);
+            setFeedback('🚀 Evaluando tu secuencia...', 'info');
+            await sleep(300);
+
+            let r = level.start.r;
+            let c = level.start.c;
+            let dir = level.start.dir || 'UP';
+
+            for (let i = 0; i < commandQueue.length; i++) {
+                const cmd = commandQueue[i];
+                renderCodeSlots(i, -1);
+
+                if (cmd === 'TURN_LEFT' || cmd === 'TURN_RIGHT') {
+                    dir = getTurnedDirection(dir, cmd);
+                    visualRotation += (cmd === 'TURN_RIGHT' ? 90 : -90);
+                    penguinPos = { r, c, dir };
+                    updatePenguinVisual(true);
+                    SFX.turn();
+                    await sleep(420);
+                } else {
+                    const moveCardinal = getMoveCardinal(dir, cmd);
+                    if (!canMove(level, r, c, moveCardinal)) {
+                        SFX.bump();
+                        const sprite = document.getElementById('penguin-sprite');
+                        sprite.classList.add('shake-error');
+                        setFeedback(`💥 ¡Chocaste en el paso ${i + 1}! Corrige tu código e inténtalo de nuevo.`, 'error');
+                        await sleep(620);
+                        sprite.classList.remove('shake-error');
+                        renderCodeSlots(-1, -1);
+                        isRunning = false;
+                        setControlsDisabled(false);
+                        return;
+                    }
+                    const { dr, dc } = DIR_VECTORS[moveCardinal];
+                    r += dr;
+                    c += dc;
+                    penguinPos = { r, c, dir };
+                    updatePenguinVisual(true);
+                    SFX.step();
+                    await sleep(440);
+                }
+            }
+
+            if (r === level.exit.r && c === level.exit.c) {
+                renderCodeSlots(-1, -1);
+                SFX.victory();
+
+                // Asigna los 9 puntos al nivel resuelto
+                levelScores[currentLevelIdx] = POINTS_PER_LEVEL;
+                updateScoreDisplay();
+                renderLevelSelector();
+
+                setFeedback('🎉 ¡Mr. Leo te felicita por tu logro! +9 puntos guardados.', 'success');
+                launchConfetti();
+                autoSaveProgressToSheets(level.id);
+                await sleep(480);
+                showVictoryModal();
+            } else {
+                SFX.bump();
+                renderCodeSlots(-1, -1);
+                setFeedback('🐟 ¡Casi llegas! Ajusta los pasos para alcanzar el pececito.', 'warning');
+            }
+
+            isRunning = false;
+            setControlsDisabled(false);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function setControlsDisabled(disabled) {
+            ['btn-dir-UP', 'btn-dir-DOWN', 'btn-dir-LEFT', 'btn-dir-RIGHT', 'btn-run', 'btn-undo', 'btn-clear']
+                .forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.disabled = disabled;
+                });
+        }
+
+        function setFeedback(text, type = 'info') {
+            const banner = document.getElementById('feedback-banner');
+            banner.textContent = text;
+            banner.className = 'w-full min-h-[30px] sm:min-h-[44px] mb-1 sm:mb-2 rounded-xl sm:rounded-2xl px-2 py-1 sm:px-3 sm:py-2 text-center font-bold text-[11px] sm:text-base leading-tight flex items-center justify-center transition-all duration-200 border sm:border-2 ';
+            if (type === 'success') banner.className += 'bg-emerald-100 text-emerald-900 border-emerald-400';
+            else if (type === 'error') banner.className += 'bg-rose-100 text-rose-900 border-rose-400';
+            else if (type === 'warning') banner.className += 'bg-amber-100 text-amber-900 border-amber-400';
+            else banner.className += 'bg-sky-50 text-sky-800 border-sky-200';
+        }
+
+        function setupKeyboardListeners() {
+            window.addEventListener('keydown', (e) => {
+                if (!document.getElementById('student-modal').classList.contains('hidden')) return;
+                if (!document.getElementById('finish-modal').classList.contains('hidden')) return;
+
+                if (!document.getElementById('victory-modal').classList.contains('hidden')) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        nextLevel();
+                    }
+                    return;
+                }
+
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                    e.preventDefault();
+                }
+                if (isRunning) return;
+
+                switch (e.key) {
+                    case 'ArrowUp':    addCommand('FORWARD'); break;
+                    case 'ArrowDown':  addCommand('BACKWARD'); break;
+                    case 'ArrowLeft':  addCommand('TURN_LEFT'); break;
+                    case 'ArrowRight': addCommand('TURN_RIGHT'); break;
+                    case 'Backspace':
+                    case 'Delete':     removeLastCommand(); break;
+                    case 'Enter':      runSequence(); break;
+                    case 'Escape':     clearCommands(); break;
+                }
+            });
+        }
+
+        function showVictoryModal() {
+            const modal = document.getElementById('victory-modal');
+            const total = getTotalScore();
+            document.getElementById('victory-total-score').textContent = `${total} / 45 pts`;
+
+            const nextBtn = document.getElementById('btn-next-level');
+            const allCompleted = levelScores.every(s => s === POINTS_PER_LEVEL);
+
+            if (allCompleted || currentLevelIdx >= EVAL_LEVELS.length - 1) {
+                nextBtn.innerHTML = '<span>Ver Boleta Final</span> <span>🎓</span>';
+            } else {
+                nextBtn.innerHTML = '<span>Vamos al siguiente Nivel</span> <span>➡️</span>';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function nextLevel() {
+            const modal = document.getElementById('victory-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            const nextUnsolved = levelScores.findIndex(s => s === 0);
+            if (currentLevelIdx < EVAL_LEVELS.length - 1) {
+                loadLevel(currentLevelIdx + 1);
+            } else if (nextUnsolved !== -1) {
+                loadLevel(nextUnsolved);
+            } else {
+                openFinishModal();
+            }
+        }
+
+        /**
+         * Guarda automáticamente el avance por nivel en Google Sheets en segundo plano
+         */
+        async function autoSaveProgressToSheets(completedLevelNum) {
+            const indicator = document.getElementById('auto-save-indicator');
+            if (indicator) {
+                indicator.textContent = '☁️ Guardando puntaje en la hoja de Mr. Leo...';
+            }
+
+            const payload = {
+                fecha: studentData.dateStr,
+                hora: studentData.timeStr,
+                estudiante: studentData.name,
+                curso: studentData.course,
+                nivelCompletado: `Nivel ${completedLevelNum}`,
+                nivel1: levelScores[0],
+                nivel2: levelScores[1],
+                nivel3: levelScores[2],
+                nivel4: levelScores[3],
+                nivel5: levelScores[4],
+                notaTotal: getTotalScore()
+            };
+
+            const signature = JSON.stringify(payload);
+            if (signature === lastSentSignature) return;
+
+            try {
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: signature
+                });
+                lastSentSignature = signature;
+                if (indicator) {
+                    indicator.textContent = '✅ ¡Puntaje guardado automáticamente en Google Sheets!';
+                }
+            } catch (error) {
+                if (indicator) {
+                    indicator.textContent = '⚠️ Sin conexión. Se reintentará al finalizar.';
+                }
+            }
+        }
+
+        /**
+         * Abre la boleta final de evaluación con el detalle por nivel y envía el registro final
+         */
+        function openFinishModal() {
+            const total = getTotalScore();
+            document.getElementById('summary-student-info').textContent =
+                `👤 ${studentData.name || 'Sin nombre'} (${studentData.course}) • 📅 ${studentData.dateStr}`;
+            document.getElementById('final-grade-display').textContent = `${total} / 45 pts`;
+
+            const breakdown = document.getElementById('levels-breakdown');
+            breakdown.innerHTML = EVAL_LEVELS.map((lvl, idx) => {
+                const pts = levelScores[idx];
+                const ok = pts === POINTS_PER_LEVEL;
+                return `
+                    <div class="flex items-center justify-between py-1 border-b border-slate-200 last:border-none">
+                        <span class="font-bold text-slate-700">${ok ? '✅' : '⬜'} ${lvl.name}</span>
+                        <span class="font-extrabold ${ok ? 'text-emerald-700' : 'text-slate-400'}">${pts} / ${lvl.points} pts</span>
+                    </div>
+                `;
+            }).join('');
+
+            const modal = document.getElementById('finish-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            submitEvaluationToGoogleSheets();
+        }
+
+        function closeFinishModal() {
+            const modal = document.getElementById('finish-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        /**
+         * Envía los datos finales de la evaluación al Web App de Google Apps Script conectado a Google Sheets
+         */
+        async function submitEvaluationToGoogleSheets() {
+            const statusBox = document.getElementById('sheets-send-status');
+            const btn = document.getElementById('btn-send-sheets');
+
+            const payload = {
+                fecha: studentData.dateStr,
+                hora: studentData.timeStr,
+                estudiante: studentData.name,
+                curso: studentData.course,
+                nivelCompletado: 'Final',
+                nivel1: levelScores[0],
+                nivel2: levelScores[1],
+                nivel3: levelScores[2],
+                nivel4: levelScores[3],
+                nivel5: levelScores[4],
+                notaTotal: getTotalScore()
+            };
+
+            const signature = JSON.stringify(payload);
+            if (signature === lastSentSignature) {
+                statusBox.classList.remove('hidden');
+                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-emerald-100 text-emerald-900 border-emerald-300';
+                statusBox.textContent = '✅ ¡Todas tus calificaciones ya están guardadas en la hoja de cálculo de Mr. Leo!';
+                btn.innerHTML = '<span>✅ Nota Guardada</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Guardando calificación...</span>';
+
+            try {
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: signature
+                });
+
+                lastSentSignature = signature;
+                SFX.victory();
+                statusBox.classList.remove('hidden');
+                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-emerald-100 text-emerald-900 border-emerald-300';
+                statusBox.textContent = '✅ ¡Calificación guardada con éxito en la hoja de cálculo de Google de Mr. Leo!';
+                btn.innerHTML = '<span>✅ Nota Guardada</span>';
+            } catch (error) {
+                statusBox.classList.remove('hidden');
+                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-rose-100 text-rose-900 border-rose-300';
+                statusBox.textContent = '❌ Error de conexión al guardar. Verifica tu internet e inténtalo otra vez.';
+                btn.disabled = false;
+                btn.innerHTML = '<span>📤 Reintentar Guardado</span>';
+            }
+        }
+
+        /**
+         * Abre la boleta final de evaluación con el detalle por nivel y envío a Google Sheets
+         */
+        function openFinishModal() {
+            const total = getTotalScore();
+            document.getElementById('summary-student-info').textContent =
+                `👤 ${studentData.name || 'Sin nombre'} (${studentData.course}) • 📅 ${studentData.dateStr}`;
+            document.getElementById('final-grade-display').textContent = `${total} / 45 pts`;
+
+            const breakdown = document.getElementById('levels-breakdown');
+            breakdown.innerHTML = EVAL_LEVELS.map((lvl, idx) => {
+                const pts = levelScores[idx];
+                const ok = pts === POINTS_PER_LEVEL;
+                return `
+                    <div class="flex items-center justify-between py-1 border-b border-slate-200 last:border-none">
+                        <span class="font-bold text-slate-700">${ok ? '✅' : '⬜'} ${lvl.name}</span>
+                        <span class="font-extrabold ${ok ? 'text-emerald-700' : 'text-slate-400'}">${pts} / ${lvl.points} pts</span>
+                    </div>
+                `;
+            }).join('');
+
+            const statusBox = document.getElementById('sheets-send-status');
+            statusBox.classList.add('hidden');
+
+            const modal = document.getElementById('finish-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeFinishModal() {
+            const modal = document.getElementById('finish-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        /**
+         * Envía los datos de la evaluación al Web App de Google Apps Script conectado a Google Sheets
+         */
+        async function submitEvaluationToGoogleSheets() {
+            const url = getAppsScriptUrl();
+            const statusBox = document.getElementById('sheets-send-status');
+            const btn = document.getElementById('btn-send-sheets');
+
+            if (!url) {
+                statusBox.classList.remove('hidden');
+                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-amber-100 text-amber-900 border-amber-300';
+                statusBox.innerHTML = '⚠️ Aún no se configuró el enlace de Google Sheets. Pide a <strong>Mr. Leo</strong> que lo pegue en el botón ⚙️.';
+                return;
+            }
+
+            if (hasSentToSheets) {
+                statusBox.classList.remove('hidden');
+                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-emerald-100 text-emerald-900 border-emerald-300';
+                statusBox.textContent = '✅ ¡Esta calificación ya fue enviada a la hoja de cálculo de Mr. Leo!';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Enviando calificación...</span>';
+
+            const payload = {
+                fecha: studentData.dateStr,
+                hora: studentData.timeStr,
+                estudiante: studentData.name,
+                curso: studentData.course,
+                nivel1: levelScores[0],
+                nivel2: levelScores[1],
+                nivel3: levelScores[2],
+                nivel4: levelScores[3],
+                nivel5: levelScores[4],
+                notaTotal: getTotalScore()
+            };
+
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+
+                hasSentToSheets = true;
+                SFX.victory();
+                statusBox.classList.remove('hidden');
+                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-emerald-100 text-emerald-900 border-emerald-300';
+                statusBox.textContent = '✅ ¡Calificación enviada con éxito a la hoja de cálculo de Google de Mr. Leo!';
+                btn.innerHTML = '<span>✅ Nota Enviada</span>';
+            } catch (error) {
+                statusBox.classList.remove('hidden');
+                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-rose-100 text-rose-900 border-rose-300';
+                statusBox.textContent = '❌ Error de conexión al enviar. Verifica tu internet e inténtalo otra vez.';
+                btn.disabled = false;
+                btn.innerHTML = '<span>📤 Reintentar Envío</span>';
+            }
+        }
+
+        function toggleSound() {
+            SFX.enabled = !SFX.enabled;
+            document.getElementById('sound-icon').textContent = SFX.enabled ? '🔊' : '🔇';
+            if (SFX.enabled) SFX.click('FORWARD');
+        }
+
+        function launchConfetti() {
+            const colors = ['#38BDF8', '#FBBF24', '#34D399', '#F472B6', '#A78BFA'];
+            for (let i = 0; i < 36; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = `${Math.random() * 100}vw`;
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+                document.body.appendChild(piece);
+
+                const fallDuration = 1400 + Math.random() * 1200;
+                const drift = (Math.random() - 0.5) * 160;
+
+                piece.animate([
+                    { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translate(${drift}px, 100vh) rotate(${360 + Math.random() * 360}deg)`, opacity: 0.2 }
+                ], {
+                    duration: fallDuration,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                });
+
+                setTimeout(() => piece.remove(), fallDuration);
+            }
+        }
+    </script>
+</body>
+</html>
