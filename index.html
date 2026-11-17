@@ -77,7 +77,7 @@
 </head>
 <body class="text-slate-800 flex flex-col justify-between min-h-[100dvh] w-full">
 
-    <!-- MODAL DE INICIO: NOMBRE DEL ESTUDIANTE Y FECHA AUTOMÁTICA -->
+    <!-- MODAL DE INICIO: NOMBRE DEL ESTUDIANTE, PARALELO (A, B, C) Y FECHA AUTOMÁTICA -->
     <div id="student-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-3xl border-4 border-sky-400 shadow-2xl max-w-md w-full p-5 sm:p-6">
             <div class="flex items-center justify-center mb-2">
@@ -104,7 +104,7 @@
                     Evaluación del Pingüino Programador
                 </h2>
                 <p class="text-xs sm:text-sm font-bold text-slate-500 mt-1">
-                    5 niveles × 9 pts cada uno = <strong>45 puntos</strong>
+                    5 niveles × 9 pts = <strong>45 puntos</strong> (Máx. 2 intentos por nivel)
                 </p>
             </div>
 
@@ -119,11 +119,23 @@
 
                 <div class="grid grid-cols-2 gap-2.5">
                     <div>
-                        <label for="student-course-input" class="block text-xs font-extrabold text-sky-900 mb-1">
-                            Curso / Paralelo:
+                        <label class="block text-xs font-extrabold text-sky-900 mb-1">
+                            Paralelo:
                         </label>
-                        <input id="student-course-input" type="text" placeholder="Ej: 1° Primaria A"
-                            class="w-full rounded-2xl border-2 border-slate-200 focus:border-sky-500 focus:outline-none px-3 py-2 font-bold text-slate-700 text-sm bg-slate-50">
+                        <div class="grid grid-cols-3 gap-1.5" id="parallel-buttons">
+                            <button type="button" onclick="selectParallel('A')" id="btn-par-A"
+                                class="btn-3d rounded-xl border-2 border-indigo-600 bg-indigo-600 text-white py-2 font-display font-bold text-sm shadow-[0_2px_0_#312E81]">
+                                A
+                            </button>
+                            <button type="button" onclick="selectParallel('B')" id="btn-par-B"
+                                class="btn-3d rounded-xl border-2 border-slate-300 bg-slate-100 hover:bg-sky-100 text-slate-700 py-2 font-display font-bold text-sm shadow-[0_2px_0_#CBD5E1]">
+                                B
+                            </button>
+                            <button type="button" onclick="selectParallel('C')" id="btn-par-C"
+                                class="btn-3d rounded-xl border-2 border-slate-300 bg-slate-100 hover:bg-sky-100 text-slate-700 py-2 font-display font-bold text-sm shadow-[0_2px_0_#CBD5E1]">
+                                C
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-extrabold text-sky-900 mb-1">
@@ -202,7 +214,7 @@
                     <!-- Encabezado del Nivel -->
                     <div class="w-full flex items-center justify-between gap-2 mb-1 sm:mb-2 px-0.5">
                         <span id="level-badge" class="bg-indigo-600 text-white font-display font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-base shadow-sm">
-                            Nivel 1 de 5 (Vale 9 pts)
+                            Nivel 1 de 5 (Intentos: 2/2)
                         </span>
                         <span id="level-hint-badge" class="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-sm">
                             Ideal: 5 bloques
@@ -316,7 +328,7 @@
                 </div>
                 <div class="flex items-center gap-2 text-[11px] sm:text-sm font-bold">
                     <span id="step-counter" class="bg-sky-100 text-sky-800 px-2 sm:px-3 py-0.5 rounded-full border border-sky-300">
-                        0 / 15 bloques
+                        0 / 8 bloques
                     </span>
                 </div>
             </div>
@@ -530,11 +542,13 @@
         // Estado de la evaluación y del estudiante
         let studentData = {
             name: '',
-            course: '',
+            course: 'A',
             dateStr: '',
             timeStr: ''
         };
         let levelScores = [0, 0, 0, 0, 0]; // 9 pts por nivel resuelto, total 45 pts
+        let levelAttempts = [0, 0, 0, 0, 0]; // Máximo 2 intentos por nivel
+        let levelLocked = [false, false, false, false, false]; // Bloqueado tras ganar o fallar 2 veces
         let currentLevelIdx = 0;
         let commandQueue = [];
         let isRunning = false;
@@ -551,6 +565,23 @@
             loadLevel(0);
             setupKeyboardListeners();
         };
+
+        /**
+         * Selecciona el paralelo (A, B o C) en el modal inicial
+         */
+        function selectParallel(par) {
+            studentData.course = par;
+            ['A', 'B', 'C'].forEach(letter => {
+                const btn = document.getElementById(`btn-par-${letter}`);
+                if (!btn) return;
+                if (letter === par) {
+                    btn.className = 'btn-3d rounded-xl border-2 border-indigo-600 bg-indigo-600 text-white py-2 font-display font-bold text-sm shadow-[0_2px_0_#312E81]';
+                } else {
+                    btn.className = 'btn-3d rounded-xl border-2 border-slate-300 bg-slate-100 hover:bg-sky-100 text-slate-700 py-2 font-display font-bold text-sm shadow-[0_2px_0_#CBD5E1]';
+                }
+            });
+            SFX.click('FORWARD');
+        }
 
         /**
          * Obtiene y formatea la fecha y hora automática del dispositivo
@@ -576,7 +607,6 @@
         function startEvaluation(e) {
             e.preventDefault();
             const nameInput = document.getElementById('student-name-input').value.trim();
-            const courseInput = document.getElementById('student-course-input').value.trim() || '1° Primaria';
             const errEl = document.getElementById('student-error-msg');
 
             if (nameInput.length < 3) {
@@ -588,9 +618,9 @@
             errEl.classList.add('hidden');
             initAutoDate();
             studentData.name = nameInput;
-            studentData.course = courseInput;
+            if (!studentData.course) studentData.course = 'A';
 
-            document.getElementById('header-student-name').textContent = `👤 ${studentData.name}`;
+            document.getElementById('header-student-name').textContent = `👤 ${studentData.name} (${studentData.course})`;
             document.getElementById('student-modal').classList.add('hidden');
             SFX.click('FORWARD');
         }
@@ -615,6 +645,7 @@
                 const isCurrent = idx === currentLevelIdx;
                 const score = levelScores[idx];
                 const isSolved = score === POINTS_PER_LEVEL;
+                const isFailedOut = levelLocked[idx] && !isSolved;
 
                 const btn = document.createElement('button');
                 btn.onclick = () => {
@@ -626,13 +657,16 @@
                     classes += 'bg-indigo-600 text-white border-indigo-800 shadow-[0_2px_0_#1E1B4B]';
                 } else if (isSolved) {
                     classes += 'bg-emerald-100 text-emerald-900 border-emerald-400 shadow-[0_2px_0_#34D399]';
+                } else if (isFailedOut) {
+                    classes += 'bg-rose-100 text-rose-800 border-rose-300 shadow-[0_2px_0_#FDA4AF]';
                 } else {
                     classes += 'bg-slate-100 hover:bg-sky-100 text-slate-700 border-slate-300 shadow-[0_2px_0_#CBD5E1]';
                 }
 
+                const statusIcon = isSolved ? '✅' : (isFailedOut ? '❌' : '');
                 btn.className = classes;
                 btn.innerHTML = `
-                    <span>N${lvl.id} ${isSolved ? '✅' : ''}</span>
+                    <span>N${lvl.id} ${statusIcon}</span>
                     <span class="text-[9px] sm:text-[10px] opacity-90">${score}/${lvl.points}p</span>
                 `;
                 container.appendChild(btn);
@@ -646,20 +680,25 @@
             isRunning = false;
 
             const alreadySolved = levelScores[idx] === POINTS_PER_LEVEL;
-            document.getElementById('level-badge').textContent = `Nivel ${level.id} de 5 (${alreadySolved ? '9/9 pts ✓' : 'Vale 9 pts'})`;
+            const isFailedOut = levelLocked[idx] && !alreadySolved;
+            const triesLeft = Math.max(0, 2 - levelAttempts[idx]);
+
+            document.getElementById('level-badge').textContent = `Nivel ${level.id} de 5 (${alreadySolved ? '9/9 pts ✓' : isFailedOut ? '0/9 pts ✗' : `Intentos: ${triesLeft}/2`})`;
             document.getElementById('level-hint-badge').textContent = `Ideal: ${level.optimalSteps} bloques`;
-            setFeedback(
-                alreadySolved
-                    ? '✅ Ya ganaste los 9 puntos de este nivel. Puedes avanzar al siguiente.'
-                    : '¡Programa el camino hasta el pececito para ganar 9 puntos!',
-                alreadySolved ? 'success' : 'info'
-            );
+
+            if (alreadySolved) {
+                setFeedback('✅ Ya ganaste los 9 puntos de este nivel.', 'success');
+            } else if (isFailedOut) {
+                setFeedback('❌ Ya usaste tus 2 intentos en este nivel (0 pts).', 'error');
+            } else {
+                setFeedback(`¡Programa el camino hasta el pececito! Tienes ${triesLeft} intento(s).`, 'info');
+            }
 
             renderLevelSelector();
             drawMaze(level);
             resetPenguinToStart(level);
             renderCodeSlots();
-            setControlsDisabled(false);
+            setControlsDisabled(levelLocked[idx]);
         }
 
         function drawMaze(level) {
@@ -789,7 +828,7 @@
         }
 
         function addCommand(cmd) {
-            if (isRunning) return;
+            if (isRunning || levelLocked[currentLevelIdx]) return;
             const level = EVAL_LEVELS[currentLevelIdx];
             if (commandQueue.length >= level.maxSlots) {
                 SFX.bump();
@@ -802,21 +841,21 @@
         }
 
         function removeLastCommand() {
-            if (isRunning || commandQueue.length === 0) return;
+            if (isRunning || levelLocked[currentLevelIdx] || commandQueue.length === 0) return;
             commandQueue.pop();
             SFX.delete();
             renderCodeSlots();
         }
 
         function removeCommandAt(index) {
-            if (isRunning) return;
+            if (isRunning || levelLocked[currentLevelIdx]) return;
             commandQueue.splice(index, 1);
             SFX.delete();
             renderCodeSlots();
         }
 
         function clearCommands() {
-            if (isRunning) return;
+            if (isRunning || levelLocked[currentLevelIdx]) return;
             commandQueue = [];
             SFX.delete();
             resetPenguinToStart(EVAL_LEVELS[currentLevelIdx]);
@@ -886,7 +925,7 @@
         }
 
         async function runSequence() {
-            if (isRunning) return;
+            if (isRunning || levelLocked[currentLevelIdx]) return;
             if (commandQueue.length === 0) {
                 SFX.bump();
                 setFeedback('¡Agrega bloques direccionales antes de ejecutar!', 'warning');
@@ -922,12 +961,10 @@
                         SFX.bump();
                         const sprite = document.getElementById('penguin-sprite');
                         sprite.classList.add('shake-error');
-                        setFeedback(`💥 ¡Chocaste en el paso ${i + 1}! Corrige tu código e inténtalo de nuevo.`, 'error');
-                        await sleep(620);
+                        await handleLevelMistake(`💥 ¡Chocaste en el paso ${i + 1}!`);
                         sprite.classList.remove('shake-error');
                         renderCodeSlots(-1, -1);
                         isRunning = false;
-                        setControlsDisabled(false);
                         return;
                     }
                     const { dr, dc } = DIR_VECTORS[moveCardinal];
@@ -944,8 +981,9 @@
                 renderCodeSlots(-1, -1);
                 SFX.victory();
 
-                // Asigna los 9 puntos al nivel resuelto
+                // Asigna los 9 puntos al nivel resuelto y lo marca completado
                 levelScores[currentLevelIdx] = POINTS_PER_LEVEL;
+                levelLocked[currentLevelIdx] = true;
                 updateScoreDisplay();
                 renderLevelSelector();
 
@@ -954,14 +992,48 @@
                 autoSaveProgressToSheets(level.id);
                 await sleep(480);
                 showVictoryModal();
+                isRunning = false;
             } else {
                 SFX.bump();
                 renderCodeSlots(-1, -1);
-                setFeedback('🐟 ¡Casi llegas! Ajusta los pasos para alcanzar el pececito.', 'warning');
+                await handleLevelMistake('🐟 ¡No llegaste al pececito!');
+                isRunning = false;
             }
+        }
 
-            isRunning = false;
-            setControlsDisabled(false);
+        /**
+         * Registra una equivocación en el nivel actual.
+         * Si acumula 2 equivocaciones, asigna 0 puntos y salta automáticamente al siguiente nivel.
+         */
+        async function handleLevelMistake(reasonText) {
+            levelAttempts[currentLevelIdx] += 1;
+            const attemptsUsed = levelAttempts[currentLevelIdx];
+
+            if (attemptsUsed >= 2) {
+                levelScores[currentLevelIdx] = 0;
+                levelLocked[currentLevelIdx] = true;
+                updateScoreDisplay();
+                renderLevelSelector();
+                document.getElementById('level-badge').textContent = `Nivel ${EVAL_LEVELS[currentLevelIdx].id} de 5 (0/9 pts ✗)`;
+
+                setFeedback(`${reasonText} Usaste tus 2 intentos (0 pts). Pasando al siguiente nivel...`, 'error');
+                autoSaveProgressToSheets(EVAL_LEVELS[currentLevelIdx].id);
+                await sleep(1600);
+
+                const nextOpen = levelLocked.findIndex(locked => !locked);
+                if (currentLevelIdx < EVAL_LEVELS.length - 1 && !levelLocked[currentLevelIdx + 1]) {
+                    loadLevel(currentLevelIdx + 1);
+                } else if (nextOpen !== -1) {
+                    loadLevel(nextOpen);
+                } else {
+                    openFinishModal();
+                }
+            } else {
+                document.getElementById('level-badge').textContent = `Nivel ${EVAL_LEVELS[currentLevelIdx].id} de 5 (Intentos: 1/2)`;
+                setFeedback(`${reasonText} Te queda 1 intento más antes de pasar al siguiente nivel.`, 'warning');
+                await sleep(650);
+                setControlsDisabled(false);
+            }
         }
 
         function sleep(ms) {
@@ -1002,7 +1074,7 @@
                 if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
                     e.preventDefault();
                 }
-                if (isRunning) return;
+                if (isRunning || levelLocked[currentLevelIdx]) return;
 
                 switch (e.key) {
                     case 'ArrowUp':    addCommand('FORWARD'); break;
@@ -1023,9 +1095,9 @@
             document.getElementById('victory-total-score').textContent = `${total} / 45 pts`;
 
             const nextBtn = document.getElementById('btn-next-level');
-            const allCompleted = levelScores.every(s => s === POINTS_PER_LEVEL);
+            const allFinished = levelLocked.every(locked => locked);
 
-            if (allCompleted || currentLevelIdx >= EVAL_LEVELS.length - 1) {
+            if (allFinished || currentLevelIdx >= EVAL_LEVELS.length - 1) {
                 nextBtn.innerHTML = '<span>Ver Boleta Final</span> <span>🎓</span>';
             } else {
                 nextBtn.innerHTML = '<span>Vamos al siguiente Nivel</span> <span>➡️</span>';
@@ -1040,11 +1112,11 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex');
 
-            const nextUnsolved = levelScores.findIndex(s => s === 0);
-            if (currentLevelIdx < EVAL_LEVELS.length - 1) {
+            const nextOpen = levelLocked.findIndex(locked => !locked);
+            if (currentLevelIdx < EVAL_LEVELS.length - 1 && !levelLocked[currentLevelIdx + 1]) {
                 loadLevel(currentLevelIdx + 1);
-            } else if (nextUnsolved !== -1) {
-                loadLevel(nextUnsolved);
+            } else if (nextOpen !== -1) {
+                loadLevel(nextOpen);
             } else {
                 openFinishModal();
             }
@@ -1100,17 +1172,19 @@
         function openFinishModal() {
             const total = getTotalScore();
             document.getElementById('summary-student-info').textContent =
-                `👤 ${studentData.name || 'Sin nombre'} (${studentData.course}) • 📅 ${studentData.dateStr}`;
+                `👤 ${studentData.name || 'Sin nombre'} (Paralelo ${studentData.course}) • 📅 ${studentData.dateStr}`;
             document.getElementById('final-grade-display').textContent = `${total} / 45 pts`;
 
             const breakdown = document.getElementById('levels-breakdown');
             breakdown.innerHTML = EVAL_LEVELS.map((lvl, idx) => {
                 const pts = levelScores[idx];
                 const ok = pts === POINTS_PER_LEVEL;
+                const failed = levelLocked[idx] && !ok;
+                const icon = ok ? '✅' : (failed ? '❌' : '⬜');
                 return `
                     <div class="flex items-center justify-between py-1 border-b border-slate-200 last:border-none">
-                        <span class="font-bold text-slate-700">${ok ? '✅' : '⬜'} ${lvl.name}</span>
-                        <span class="font-extrabold ${ok ? 'text-emerald-700' : 'text-slate-400'}">${pts} / ${lvl.points} pts</span>
+                        <span class="font-bold text-slate-700">${icon} ${lvl.name}</span>
+                        <span class="font-extrabold ${ok ? 'text-emerald-700' : failed ? 'text-rose-600' : 'text-slate-400'}">${pts} / ${lvl.points} pts</span>
                     </div>
                 `;
             }).join('');
