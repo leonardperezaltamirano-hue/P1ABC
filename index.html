@@ -543,7 +543,7 @@
         let lastSentSignature = '';
 
         // URL fija del Web App de Google Apps Script de Mr. Leo
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6MNF7oqxgRY9m5A05_CLwp-t5kjISjiPLk8Kf1iS4slsxKXXgfOCnG32pIw3Q1wSY/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvzKRMPhrRb06rotGyNdCPyLjMEHyclCgYc6LMyUFln5_lYz9CvLc017juiWSQVrF1/exec";
 
         window.onload = function () {
             initAutoDate();
@@ -1181,102 +1181,6 @@
                 statusBox.textContent = '❌ Error de conexión al guardar. Verifica tu internet e inténtalo otra vez.';
                 btn.disabled = false;
                 btn.innerHTML = '<span>📤 Reintentar Guardado</span>';
-            }
-        }
-
-        /**
-         * Abre la boleta final de evaluación con el detalle por nivel y envío a Google Sheets
-         */
-        function openFinishModal() {
-            const total = getTotalScore();
-            document.getElementById('summary-student-info').textContent =
-                `👤 ${studentData.name || 'Sin nombre'} (${studentData.course}) • 📅 ${studentData.dateStr}`;
-            document.getElementById('final-grade-display').textContent = `${total} / 45 pts`;
-
-            const breakdown = document.getElementById('levels-breakdown');
-            breakdown.innerHTML = EVAL_LEVELS.map((lvl, idx) => {
-                const pts = levelScores[idx];
-                const ok = pts === POINTS_PER_LEVEL;
-                return `
-                    <div class="flex items-center justify-between py-1 border-b border-slate-200 last:border-none">
-                        <span class="font-bold text-slate-700">${ok ? '✅' : '⬜'} ${lvl.name}</span>
-                        <span class="font-extrabold ${ok ? 'text-emerald-700' : 'text-slate-400'}">${pts} / ${lvl.points} pts</span>
-                    </div>
-                `;
-            }).join('');
-
-            const statusBox = document.getElementById('sheets-send-status');
-            statusBox.classList.add('hidden');
-
-            const modal = document.getElementById('finish-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeFinishModal() {
-            const modal = document.getElementById('finish-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        /**
-         * Envía los datos de la evaluación al Web App de Google Apps Script conectado a Google Sheets
-         */
-        async function submitEvaluationToGoogleSheets() {
-            const url = getAppsScriptUrl();
-            const statusBox = document.getElementById('sheets-send-status');
-            const btn = document.getElementById('btn-send-sheets');
-
-            if (!url) {
-                statusBox.classList.remove('hidden');
-                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-amber-100 text-amber-900 border-amber-300';
-                statusBox.innerHTML = '⚠️ Aún no se configuró el enlace de Google Sheets. Pide a <strong>Mr. Leo</strong> que lo pegue en el botón ⚙️.';
-                return;
-            }
-
-            if (hasSentToSheets) {
-                statusBox.classList.remove('hidden');
-                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-emerald-100 text-emerald-900 border-emerald-300';
-                statusBox.textContent = '✅ ¡Esta calificación ya fue enviada a la hoja de cálculo de Mr. Leo!';
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<span>⏳ Enviando calificación...</span>';
-
-            const payload = {
-                fecha: studentData.dateStr,
-                hora: studentData.timeStr,
-                estudiante: studentData.name,
-                curso: studentData.course,
-                nivel1: levelScores[0],
-                nivel2: levelScores[1],
-                nivel3: levelScores[2],
-                nivel4: levelScores[3],
-                nivel5: levelScores[4],
-                notaTotal: getTotalScore()
-            };
-
-            try {
-                await fetch(url, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                });
-
-                hasSentToSheets = true;
-                SFX.victory();
-                statusBox.classList.remove('hidden');
-                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-emerald-100 text-emerald-900 border-emerald-300';
-                statusBox.textContent = '✅ ¡Calificación enviada con éxito a la hoja de cálculo de Google de Mr. Leo!';
-                btn.innerHTML = '<span>✅ Nota Enviada</span>';
-            } catch (error) {
-                statusBox.classList.remove('hidden');
-                statusBox.className = 'mb-3 text-xs font-bold rounded-xl p-2.5 border bg-rose-100 text-rose-900 border-rose-300';
-                statusBox.textContent = '❌ Error de conexión al enviar. Verifica tu internet e inténtalo otra vez.';
-                btn.disabled = false;
-                btn.innerHTML = '<span>📤 Reintentar Envío</span>';
             }
         }
 
